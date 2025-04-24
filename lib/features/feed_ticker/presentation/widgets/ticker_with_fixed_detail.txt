@@ -1,0 +1,126 @@
+  void _showItemDetail(FeedItem item) {
+    // Mark as read
+    ref.read(feedItemsNotifierProvider().notifier).markAsRead(item.id\!);
+    
+    // Debug the item contents
+    AppLogger.info('Showing item detail: ${item.title}');
+    AppLogger.info('Item description: ${item.description?.substring(0, Math.min(100, item.description?.length ?? 0))}...');
+    
+    // Show detailed view using full-screen popup
+    PopupWindow.show(
+      context: context,
+      builder: (context) => Container(
+        width: 800,
+        height: 600,
+        decoration: BoxDecoration(
+          color: Colors.grey[850],
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.5),
+              spreadRadius: 5,
+              blurRadius: 7,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              HtmlUtils.decodeHtml(item.title),
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (item.author \!= null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12.0),
+                child: Text(
+                  'By ${item.author}',
+                  style: const TextStyle(
+                    fontStyle: FontStyle.italic,
+                    color: Colors.grey,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            if (item.imageUrl \!= null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  item.imageUrl\!,
+                  width: double.infinity,
+                  height: 200,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => 
+                      const SizedBox(height: 0),
+                ),
+              ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: SingleChildScrollView(
+                child: item.content \!= null
+                  ? Text(
+                      HtmlUtils.decodeHtml(item.content\!),
+                      style: const TextStyle(fontSize: 16, color: Colors.white),
+                    )
+                  : item.description \!= null
+                    ? Text(
+                        HtmlUtils.decodeHtml(item.description\!),
+                        style: const TextStyle(fontSize: 16, color: Colors.white),
+                      )
+                    : const Text(
+                        'No content available',
+                        style: TextStyle(color: Colors.white70),
+                      ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (item.link \!= null)
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                onPressed: () async {
+                  final url = Uri.parse(item.link\!);
+                  if (await canLaunchUrl(url)) {
+                    await launchUrl(url);
+                  } else {
+                    AppLogger.error('Could not launch ${item.link}');
+                  }
+                },
+                icon: const Icon(Icons.open_in_browser),
+                label: const Text('Open in Browser'),
+              ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  style: TextButton.styleFrom(foregroundColor: Colors.white),
+                  onPressed: () {
+                    _handleStarToggle(item);
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    item.isStarred ? 'Remove Star' : 'Star',
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Close'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+EOL < /dev/null
